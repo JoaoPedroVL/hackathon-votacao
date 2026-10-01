@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Votação — Hackathon{% endblock %}
+{% block content %}
+<div class="card">
+  {% if juiz %}
+    <p style="font-size:.95rem">
+      Olá, <strong>{{ juiz }}</strong>! 👋
+      <a href="{{ url_for('sair') }}" style="color:var(--roxo);float:right">trocar</a>
+    </p>
+  {% elif nome_pendente %}
+    <h3>🔐 Chave secreta</h3>
+    <p style="font-size:.88rem;color:var(--cinza);margin-bottom:10px">
+      Olá, <strong>{{ nome_pendente }}</strong>! Digite a chave informada pela organização.
+      <a href="{{ url_for('sair') }}" style="color:var(--roxo)">voltar</a>
+    </p>
+    <form method="post" action="{{ url_for('definir_juiz') }}">
+      <input type="password" name="chave" placeholder="Chave secreta" required
+             autocomplete="off" autofocus>
+      <button type="submit" class="btn" style="margin-top:12px">Confirmar</button>
+    </form>
+  {% else %}
+    <h3>Quem está votando?</h3>
+    <form method="post" action="{{ url_for('definir_juiz') }}">
+      <input name="juiz" placeholder="Digite seu nome" required list="juizes"
+             autocomplete="off" autocapitalize="words">
+      <datalist id="juizes">{% for j in juizes %}<option value="{{ j }}">{% endfor %}</datalist>
+      <button type="submit" class="btn" style="margin-top:12px">Entrar</button>
+    </form>
+  {% endif %}
+</div>
+
+<p class="card" style="color:var(--cinza);font-size:.85rem">
+  📋 <strong>{{ propostas|length }}</strong> proposta{{ 's' if propostas|length != 1 }} inscrita{{ 's' if propostas|length != 1 }}
+  · 🧑‍⚖️ Avaliadores: <strong>{{ juizes|length }} de {{ max_avaliadores }}</strong>
+  {%- if juizes %} ({{ juizes|join(', ') }}){% endif %}
+</p>
+
+{% for p in propostas %}
+<div class="prop">
+  <div class="topo">
+    <div class="num">{{ p.id + 1 }}</div>
+    <div>
+      <div class="titulo">{{ p.dados.get('Título da proposta', 'Sem título') }}</div>
+      <div class="equipe">{{ p.dados.get('Nome da equipe:', '') }}</div>
+    </div>
+  </div>
+  <div class="tags">
+    {% if p.dados.get('Turno') %}<span class="tag">🕐 {{ p.dados['Turno'] }}</span>{% endif %}
+    {% if p.dados.get('Seguimento de ensino') %}<span class="tag">🎓 {{ p.dados['Seguimento de ensino'] }}</span>{% endif %}
+    {% if p.id in votados %}<span class="tag verde">✅ você avaliou</span>{% endif %}
+    <span class="tag {{ 'verde' if qtd_avaliados.get(p.id, 0) >= max_avaliadores else 'amb' }}">
+      🧑‍⚖️ {{ qtd_avaliados.get(p.id, 0) }} de {{ max_avaliadores }}
+    </span>
+    {% if medias.get(p.id) is not none %}
+    <span class="tag {{ 'verde' if medias[p.id] >= 7 else ('amb' if medias[p.id] >= 5 else 'verm') }}">
+      ⭐ média {{ "%.2f"|format(medias[p.id]) }}
+    </span>
+    {% endif %}
+  </div>
+  {% if juiz %}
+  <a class="btn {{ 'verde' if p.id in votados }}" href="{{ url_for('proposta', pid=p.id) }}">
+    {{ '✏️ Revisar avaliação' if p.id in votados else '⭐ Avaliar proposta' }}
+  </a>
+  {% endif %}
+</div>
+{% else %}
+<div class="card" style="text-align:center;color:var(--cinza)">
+  Ainda não há inscrições no formulário. 🕐
+</div>
+{% endfor %}
+{% endblock %}

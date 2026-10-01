@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+votos.db
+planilha_cache.csv
+*respostas*.csv

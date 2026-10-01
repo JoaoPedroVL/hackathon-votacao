@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Avaliar — Hackathon{% endblock %}
+{% block content %}
+<div class="card">
+  <h3>📄 Proposta #{{ p.id + 1 }}</h3>
+  <p style="font-weight:800;font-size:1.1rem;line-height:1.3">
+    {{ p.dados.get('Título da proposta', 'Sem título') }}
+  </p>
+  <p style="color:var(--cinza);font-size:.85rem;margin-top:4px">
+    {{ p.dados.get('Nome da equipe:', '') }}
+  </p>
+  <div class="tags" style="margin-top:10px">
+    {% if p.dados.get('Turno') %}<span class="tag">🕐 {{ p.dados['Turno'] }}</span>{% endif %}
+    {% if p.dados.get('Seguimento de ensino') %}<span class="tag">🎓 {{ p.dados['Seguimento de ensino'] }}</span>{% endif %}
+  </div>
+
+  <dl class="campos">
+    {% for campo, valor in p.dados.items() if valor and campo not in
+       ['Carimbo de data/hora', 'Título da proposta', 'Nome da equipe:', 'Turno',
+        'Seguimento de ensino',
+        'Declaro que as informações apresentadas são de responsabilidade da equipe e que esta é a única inscrição submetida pelo grupo.',
+        'Estou ciente de que as propostas serão avaliadas conforme os critérios divulgados pela organização do Hackathon.'] %}
+    <dt>{{ campo }}</dt>
+    <dd>{{ valor }}</dd>
+    {% endfor %}
+  </dl>
+</div>
+
+<div class="card">
+  <h3>⭐ Avaliação — {{ juiz }}</h3>
+  <form method="post">
+    {% for c in criterios %}
+    <div class="nota-row">
+      <label for="n{{ loop.index }}">{{ c }}</label>
+      <input type="number" inputmode="numeric" id="n{{ loop.index }}" name="{{ c }}"
+             min="0" max="10" required value="{{ notas.get(c, '') }}">
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn" style="margin-top:10px">💾 Salvar avaliação</button>
+    <a class="btn sec" href="{{ url_for('votar') }}" style="margin-top:10px">← Voltar à lista</a>
+  </form>
+</div>
+{% endblock %}

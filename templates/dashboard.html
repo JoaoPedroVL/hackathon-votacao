@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Hackathon{% endblock %}
+{% block content %}
+<div class="stats">
+  <div class="stat azul">
+    <span class="ico">📝</span>
+    <span class="num">{{ total }}</span>
+    <span class="lbl">Propostas inscritas</span>
+  </div>
+  <div class="stat roxo">
+    <span class="ico">🕐</span>
+    <span class="num">{{ por_turno|length }}</span>
+    <span class="lbl">Turnos diferentes</span>
+  </div>
+  <div class="stat verde">
+    <span class="ico">🎓</span>
+    <span class="num">{{ por_segmento|length }}</span>
+    <span class="lbl">Seguimentos de ensino</span>
+  </div>
+  <div class="stat laranja">
+    <span class="ico">⭐</span>
+    <span class="num">{{ ranking|sum(attribute='n_avaliadores') }}</span>
+    <span class="lbl">Avaliações feitas</span>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <h3>🕐 Inscrições por Turno</h3>
+  <canvas id="chTurno" height="180"></canvas>
+</div>
+
+<div class="card">
+  <h3>🎓 Inscrições por Seguimento de ensino</h3>
+  <canvas id="chSeg" height="220"></canvas>
+</div>
+
+<div class="card">
+  <h3>🎯 Inscrições por Eixo de Participação</h3>
+  <canvas id="chEixo" height="240"></canvas>
+</div>
+
+<div class="card">
+  <h3>🏆 Ranking das propostas (média entre os avaliadores)</h3>
+  {% if ranking %}
+  <div style="overflow-x:auto">
+  <table>
+    <tr><th>#</th><th>Proposta</th><th>Média</th><th>Avaliadores</th></tr>
+    {% for r in ranking %}
+    <tr>
+      <td>{{ ['🥇','🥈','🥉'][loop.index0] if loop.index0 < 3 else loop.index }}</td>
+      <td>
+        {{ r.get('titulo', 'Proposta ' ~ (r.id + 1)) }}
+        <div style="font-size:.72rem;color:var(--cinza);margin-top:2px">
+          {% for c, m in r.criterios.items() %}{{ c }}: <strong>{{ "%.1f"|format(m) }}</strong>{{ ' · ' if not loop.last }}{% endfor %}
+        </div>
+      </td>
+      <td>
+        <strong style="font-size:1.05rem;
+          color:{{ '#059669' if r.media >= 7 else ('#d97706' if r.media >= 5 else '#dc2626') }}">
+          {{ "%.2f"|format(r.media) }}
+        </strong>
+      </td>
+      <td>{{ r.n_avaliadores }} de {{ max_avaliadores }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <p style="color:var(--cinza);font-size:.9rem">Nenhuma avaliação registrada ainda.</p>
+  {% endif %}
+</div>
+
+<p class="rodape">Fonte: {{ ultimo_csv }} · Recarregue a página para atualizar</p>
+
+<script>
+const cores = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+Chart.defaults.font.family = 'system-ui, sans-serif';
+Chart.defaults.color = '#64748b';
+
+function opcoesBarras(horizontal) {
+  return {
+    indexAxis: horizontal ? 'y' : 'x',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: horizontal }, ticks: { precision: 0 } },
+      y: { grid: { display: !horizontal }, ticks: { precision: 0, autoSkip: false } }
+    },
+    datasets: { bar: { borderRadius: 8, maxBarThickness: 32 } }
+  };
+}
+
+new Chart(chTurno, {
+  type: 'bar',
+  data: { labels: {{ por_turno.keys()|list|tojson }},
+    datasets: [{ data: {{ por_turno.values()|list|tojson }},
+      backgroundColor: '#6366f1', borderRadius: 8, maxBarThickness: 40 }] },
+  options: opcoesBarras(false)
+});
+
+new Chart(chSeg, {
+  type: 'bar',
+  data: { labels: {{ por_segmento.keys()|list|tojson }},
+    datasets: [{ data: {{ por_segmento.values()|list|tojson }},
+      backgroundColor: '#10b981', borderRadius: 8, maxBarThickness: 28 }] },
+  options: opcoesBarras(true)
+});
+
+new Chart(chEixo, {
+  type: 'doughnut',
+  data: { labels: {{ por_eixo.keys()|list|tojson }},
+    datasets: [{ data: {{ por_eixo.values()|list|tojson }},
+      backgroundColor: cores, borderWidth: 3, borderColor: '#fff' }] },
+  options: { responsive: true, cutout: '58%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true } } } }
+});
+</script>
+{% endblock %}

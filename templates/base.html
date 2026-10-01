@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <title>{% block title %}Hackathon{% endblock %}</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --roxo: #4f46e5;
+      --roxo-escuro: #3730a3;
+      --fundo: #f1f5f9;
+      --texto: #1e293b;
+      --cinza: #64748b;
+      --borda: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--fundo); color: var(--texto);
+      min-height: 100vh;
+    }
+
+    /* ---------- topo ---------- */
+    header {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 55%, #7c3aed 100%);
+      color: #fff; padding: 18px 16px 52px;
+      border-radius: 0 0 28px 28px;
+    }
+    header h1 { font-size: 1.2rem; text-align: center; font-weight: 700;
+                display: flex; align-items: center; justify-content: center; gap: 8px; }
+    header p { text-align: center; font-size: .8rem; opacity: .85; margin-top: 4px; }
+
+    nav {
+      display: flex; gap: 8px; justify-content: center;
+      margin: -28px 12px 0; position: relative; z-index: 2;
+    }
+    nav a {
+      flex: 1; max-width: 200px; text-align: center; text-decoration: none;
+      background: #fff; color: var(--texto); font-weight: 600; font-size: .9rem;
+      padding: 12px 0; border-radius: 14px;
+      box-shadow: 0 4px 14px rgb(79 70 229 / .18);
+      transition: transform .15s, box-shadow .15s;
+    }
+    nav a.ativo {
+      background: var(--roxo); color: #fff;
+      box-shadow: 0 4px 14px rgb(79 70 229 / .4);
+    }
+    nav a:active { transform: scale(.96); }
+
+    main { max-width: 900px; margin: 20px auto 0; padding: 0 14px 40px; }
+
+    /* ---------- cards ---------- */
+    .card {
+      background: #fff; border-radius: 18px; padding: 18px;
+      box-shadow: 0 2px 10px rgb(15 23 42 / .06);
+      margin-bottom: 14px;
+    }
+    .card h3 { font-size: .82rem; color: var(--cinza); font-weight: 600;
+               text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; }
+
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (min-width: 640px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+    .stat {
+      border-radius: 18px; padding: 16px; color: #fff;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .stat .ico { font-size: 1.3rem; }
+    .stat .num { font-size: 1.9rem; font-weight: 800; line-height: 1.1; }
+    .stat .lbl { font-size: .75rem; opacity: .9; }
+    .stat.azul   { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .stat.roxo   { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .stat.verde  { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat.laranja{ background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+    .grid2 { display: grid; grid-template-columns: 1fr; gap: 0; }
+    @media (min-width: 720px) {
+      .grid2 { grid-template-columns: 1fr 1fr; gap: 14px; }
+      .grid2 .card { margin-bottom: 14px; }
+    }
+
+    /* ---------- lista / propostas ---------- */
+    .prop {
+      background: #fff; border-radius: 18px; padding: 16px; margin-bottom: 12px;
+      box-shadow: 0 2px 10px rgb(15 23 42 / .06);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .prop .topo { display: flex; gap: 12px; align-items: flex-start; }
+    .prop .num {
+      min-width: 38px; height: 38px; border-radius: 12px;
+      background: #eef2ff; color: var(--roxo); font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .prop .titulo { font-weight: 700; font-size: .98rem; line-height: 1.3; }
+    .prop .equipe { font-size: .82rem; color: var(--cinza); margin-top: 2px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      display: inline-block; background: #eef2ff; color: #4338ca;
+      border-radius: 999px; padding: 3px 12px; font-size: .75rem; font-weight: 600;
+    }
+    .tag.verde { background: #dcfce7; color: #166534; }
+    .tag.amb { background: #fef3c7; color: #92400e; }
+    .tag.verm { background: #fee2e2; color: #b91c1c; }
+
+    .btn {
+      display: block; text-align: center; text-decoration: none;
+      background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff;
+      border: none; border-radius: 12px; padding: 13px 16px;
+      font: inherit; font-weight: 700; cursor: pointer; width: 100%;
+      box-shadow: 0 4px 12px rgb(79 70 229 / .3);
+    }
+    .btn:active { transform: scale(.98); }
+    .btn.sec { background: #f1f5f9; color: var(--texto); box-shadow: none; }
+    .btn.verde { background: linear-gradient(135deg, #10b981, #059669);
+                 box-shadow: 0 4px 12px rgb(16 185 129 / .3); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--borda);
+             font-size: .88rem; }
+    th { color: var(--cinza); font-size: .75rem; text-transform: uppercase; }
+
+    input, select {
+      font: inherit; width: 100%; padding: 13px 14px;
+      border: 2px solid var(--borda); border-radius: 12px; background: #fff;
+    }
+    input:focus { outline: none; border-color: var(--roxo); }
+
+    dl.campos dt { font-weight: 700; color: #334155; margin-top: 14px; font-size: .85rem; }
+    dl.campos dd {
+      background: #f8fafc; border-radius: 10px; padding: 10px 12px;
+      margin-top: 4px; font-size: .9rem; line-height: 1.5;
+    }
+
+    .nota-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    .nota-row label { flex: 1; font-weight: 600; font-size: .95rem; }
+    .nota-row input { width: 84px; text-align: center; font-size: 1.1rem; font-weight: 700; }
+
+    .rodape { text-align: center; color: #94a3b8; font-size: .75rem; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚀 Hackathon 2026</h1>
+    <p>{% block subtitulo %}Painel de votação dos juízes{% endblock %}</p>
+  </header>
+
+  <nav>
+    <a href="{{ url_for('dashboard') }}" class="{{ 'ativo' if request.endpoint == 'dashboard' }}">📊 Dashboard</a>
+    <a href="{{ url_for('votar') }}" class="{{ 'ativo' if request.endpoint in ['votar', 'proposta'] }}">🗳️ Votação</a>
+  </nav>
+
+  <main>
+    {% with msgs = get_flashed_messages() %}
+      {% for m in msgs %}
+      <div class="card" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca">
+        ⚠️ {{ m }}
+      </div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
